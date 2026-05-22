@@ -138,6 +138,9 @@ kp.amr.plot = plot_hyperinf_compare_orderings(fit.x, fit.y,
                                          expt.names=c("Gambia", "South Korea"), 
                                          feature.names = fit.x$boots[[1]]$featurenames)
 
+png("part-kp-plot.png", width=600*sf, height=400*sf, res=72*sf)
+print(kp.amr.plot)
+dev.off()
 
 ####### MRO example (not used in current draft)
 
