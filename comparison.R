@@ -33,7 +33,7 @@ co.plot.2 = plot_hyperinf_compare_orderings(fit.0pa, fit.0pb, p.scale=0.5, theta
 plot.om.abs = plot_hyperinf_ordering_matrices(c(fit.0pa$boots, fit.0pb$boots),
                                               expt.names=c(rep("HMM",11), rep("Mk", 10)), type="absolute")
 plot.om.rel = plot_hyperinf_ordering_matrices(c(fit.0pa$boots, fit.0pb$boots),
-                                              expt.names=c(rep("HMM",11), rep("Mk", 10)), type="relative")
+                                              expt.names=c(rep("HMM",11), rep("Mk", 10)), type="transitions")
 
 co.net.plot = plot_hyperinf_comparative(c(fit.0pa$boots[1:5], fit.0pb$boots[1:5]), style="full",
                                         expt.names=c(rep("HMM", length(fit.0pa$boots[1:5])),
@@ -47,7 +47,7 @@ png("part-1-plot.png", width=600*sf, height=480*sf, res=72*sf)
 print(part.1.plot)
 dev.off()
 
-#######
+######
 
 set.seed(1)
 sim.tree.2 = hyperdags::simulate_accumulation(n, L, dynamics="poisson")
@@ -66,7 +66,7 @@ co.plot.1 = plot_hyperinf_compare_orderings(fit.0a, fit.0b, p.scale=0.5, thetast
 plot.om.abs.1 = plot_hyperinf_ordering_matrices(c(fit.0a$boots, fit.0b$boots),
                                               expt.names=c(rep("HMM",11), rep("Mk", 10)), type="absolute")
 plot.om.rel.1 = plot_hyperinf_ordering_matrices(c(fit.0a$boots, fit.0b$boots),
-                                              expt.names=c(rep("HMM",11), rep("Mk", 10)), type="relative")
+                                              expt.names=c(rep("HMM",11), rep("Mk", 10)), type="transitions")
 
 #plot_hyperinf_bubbles(list(fit.0a, fit.0b, fit.0c), p.scale=0.5)
 
