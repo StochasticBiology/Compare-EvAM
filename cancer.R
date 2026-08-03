@@ -26,7 +26,9 @@ ncol(df_wide)
 cancer.types = unique(df_wide$histology_abbreviation)
 
 # take a look at an example slice through the dat (kidney) to compare to the article
-mat = as.matrix(df_wide[df_wide$histology_abbreviation == "Kidney-RCC.clearcell",3:ncol(df_wide)])
+#mat = as.matrix(df_wide[df_wide$histology_abbreviation == "Kidney-RCC.clearcell",3:ncol(df_wide)])
+#mat = as.matrix(df_wide[df_wide$histology_abbreviation == "Myeloid-MPN",3:ncol(df_wide)])
+mat = as.matrix(df_wide[df_wide$histology_abbreviation == "CNS-GBM",3:ncol(df_wide)])
 mat <- mat[, order(as.numeric(gsub("[^0-9].*", "", colnames(mat))))]
 mat <- mat[order(rowSums(mat)), ]
 heatmap(mat,
@@ -96,7 +98,7 @@ if(run.code == TRUE) {
         # fit bootstrapped HyperHMM models to both cancer types
         for(this.type in this.types) {
           data.mat[[this.type]] = as.matrix(df_new[df_new$histology_abbreviation==this.type, 3:ncol(df_new)])
-          cancer.fits[[this.type]] = hyperinf(data.mat[[this.type]], boot.parallel = 10)
+          cancer.fits[[this.type]] = hyperinf(data.mat[[this.type]], boot.parallel = 100)
         }
         
         pair.comp.rel = compare_orderings(cancer.fits[[this.types[1]]], cancer.fits[[this.types[2]]], type = "relative")
@@ -111,7 +113,7 @@ if(run.code == TRUE) {
     }
   }
   
-  save(res.list, file = "res-list.Rdata")
+  save(res.list, file = "res-list-100.Rdata")
 } else {
   load("res-list.Rdata")
 }
@@ -130,14 +132,25 @@ for(i in 1:length(res.list)) {
 library(ggraph)
 library(igraph)
 
-hits.g = graph_from_data_frame(hits[hits$Count>2,c(3,4,2)])
+hits.g = graph_from_data_frame(hits[hits$Count>0,c(3,4,2)])
 png("diff-graph.png", width=400*sf, height=300*sf, res=72*sf)
-ggraph(hits.g, layout = "stress") + geom_edge_link(aes(width=Count), alpha=0.2) + 
+ggraph(hits.g, layout = "kk") + geom_edge_link(aes(width=Count), alpha=0.2) + 
   geom_node_text(aes(label=name), size=2.3) + theme_void()
 dev.off()
 
-ref = 601
+prune.g = delete_vertices(hits.g, V(hits.g)[name == "Myeloid\nMPN"])
+png("diff-prune-graph.png", width=400*sf, height=300*sf, res=72*sf)
+ggraph(prune.g, layout = "kk") + geom_edge_link(aes(width=Count), alpha=0.2) + 
+  geom_node_text(aes(label=name), size=2.3) + theme_void()
+dev.off()
+
+ref = 353
 this.types = res.list[[ref]]$types
+#this.types = c("CNS-PiloAstro", "CNS-GBM")
+#this.types = c("Kidney-RCC.papillary", "Kidney-RCC.clearcell")
+#this.types = c("CNS-Oligo", "CNS-PiloAstro")
+#this.types = c("Breast-AdenoCA", "Thy-AdenoCA")
+#this.types = c("Ovary-AdenoCA", "Uterus-AdenoCA")
 # subset out this pair of cancer types
 this.df = df_wide[df_wide$histology_abbreviation %in% this.types,]
 
@@ -178,16 +191,52 @@ if(top.together) {
 # df_new now stores data on the top N features for our pair
 cancer.fits = data.mat = list()
 
+recolor2 = scale_fill_manual(values=c("steelblue", "tomato", "white"))
+nominorx = scale_x_continuous(breaks = scales::breaks_width(1), minor_breaks = NULL)
+nominory = scale_y_continuous(breaks = scales::breaks_width(1), minor_breaks = NULL)
 
 # fit bootstrapped HyperHMM models to both cancer types
 for(this.type in this.types) {
   data.mat[[this.type]] = as.matrix(df_new[df_new$histology_abbreviation==this.type, 3:ncol(df_new)])
-  cancer.fits[[this.type]] = hyperinf(data.mat[[this.type]], boot.parallel = 10)
+  cancer.fits[[this.type]] = hyperinf(data.mat[[this.type]], boot.parallel = 100)
 }
+
+cancer.co = plot_hyperinf_compare_orderings(cancer.fits[[1]], cancer.fits[[2]],
+                                            expt.names = this.types,
+                                            thetastep = 2) + scale_x_continuous(breaks=1:8)
 
 # visualise the comparison of inferred orderings
 png("cancer-example.png", width=400*sf, height=300*sf, res=72*sf)
-plot_hyperinf_compare_orderings(cancer.fits[[1]], cancer.fits[[2]],
-                                expt.names = this.types,
-                                thetastep = 3) + scale_x_continuous(breaks=1:8)
+print(cancer.co + recolor2)
 dev.off()
+
+
+####### KpAMR example
+
+# pulled from Kp paper
+load("example-countries.Rdata")
+country.list = country.sub.list
+
+# here we see differences
+fit.x = multiple_fits_to_booted_fit(country.list$Gambia)
+fit.y = multiple_fits_to_booted_fit(country.list$South_Korea)
+
+kp.amr.plot = plot_hyperinf_compare_orderings(fit.x, fit.y, 
+                                              sqrt.trans=TRUE, thetastep=3,
+                                              expt.names=c("Gambia", "South Korea"), 
+                                              feature.names = fit.x$boots[[1]]$featurenames)
+
+kp.amr.plot + recolor2
+png("part-kp-plot.png", width=600*sf, height=400*sf, res=72*sf)
+print(kp.amr.plot + recolor2)
+dev.off()
+
+####
+
+graph.summary = ggraph(prune.g, layout = "kk") + geom_edge_link(aes(width=Count), alpha=0.2) + 
+  geom_node_text(aes(label=name), size=2.3) + theme_void()
+
+ggarrange(kp.amr.plot + recolor2,
+          ggarrange(cancer.co + recolor2, graph.summary, labels=c("B", "C")),
+          labels=c("A", ""), nrow = 2)
+
