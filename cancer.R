@@ -132,7 +132,7 @@ for(i in 1:length(res.list)) {
 library(ggraph)
 library(igraph)
 
-hits.g = graph_from_data_frame(hits[hits$Count>0,c(3,4,2)])
+hits.g = graph_from_data_frame(hits[hits$Count>2,c(3,4,2)])
 png("diff-graph.png", width=400*sf, height=300*sf, res=72*sf)
 ggraph(hits.g, layout = "kk") + geom_edge_link(aes(width=Count), alpha=0.2) + 
   geom_node_text(aes(label=name), size=2.3) + theme_void()
@@ -233,10 +233,12 @@ dev.off()
 
 ####
 
-graph.summary = ggraph(prune.g, layout = "kk") + geom_edge_link(aes(width=Count), alpha=0.2) + 
+graph.summary = ggraph(hits.g, layout = "kk") + geom_edge_link(aes(width=Count), alpha=0.2) + 
   geom_node_text(aes(label=name), size=2.3) + theme_void()
 
+png("examples-plot.png", width=800*sf, height=800*sf, res=72*sf)
 ggarrange(kp.amr.plot + recolor2,
           ggarrange(cancer.co + recolor2, graph.summary, labels=c("B", "C")),
-          labels=c("A", ""), nrow = 2)
+          labels=c("A", ""), nrow = 2, heights=c(1.5,1))
+dev.off()
 
