@@ -129,6 +129,13 @@ for(i in 1:length(res.list)) {
   }
 }
 
+split1 <- strsplit(hits$type.1, "\n")
+split2 <- strsplit(hits$type.2, "\n")
+
+keep <- mapply(function(a, b) any(a %in% b), split1, split2)
+
+hits[keep, ]
+
 library(ggraph)
 library(igraph)
 
@@ -215,7 +222,6 @@ dev.off()
 
 # pulled from Kp paper
 load("example-countries.Rdata")
-country.list = country.sub.list
 
 # here we see differences
 fit.x = multiple_fits_to_booted_fit(country.list$Gambia)

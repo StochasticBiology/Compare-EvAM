@@ -169,24 +169,3 @@ ggarrange(plot_hyperinf(fit.1b),
           plot_hyperinf(fit.2b))
 
 
-####### MRO example (not used in current draft)
-
-api.tree = read.tree("mro-ncbi-tree-2025-apicomplexans.nwk")
-cil.tree = read.tree("mro-ncbi-tree-2025-ciliophora.nwk")
-api.df = read.csv("mro-barcodes-2025-apicomplexans.csv")
-cil.df = read.csv("mro-barcodes-2025-ciliophora-1.csv")
-api.tree$tip.label = gsub("_", " ", api.tree$tip.label)
-cil.tree$tip.label = gsub("_", " ", cil.tree$tip.label)
-
-plot_hyperinf_data(api.df, api.tree)
-plot_hyperinf_data(cil.df, cil.tree)
-
-api.fit = hyperinf(api.df, api.tree, losses = TRUE, boot.parallel = 10)
-cil.fit = hyperinf(cil.df, cil.tree, losses = TRUE, boot.parallel = 10)
-
-mro.plot = plot_hyperinf_compare_orderings(api.fit, cil.fit,
-                                           thetastep=3, p.scale=0.5,
-                                           expt.names = c("Apicomplexans", "Ciliates"))
-
-ggarrange(kp.amr.plot, mro.plot, labels=c("A", "B"), widths=c(1.6,1))
-
