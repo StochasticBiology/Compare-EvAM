@@ -8,27 +8,31 @@ sf = 2
 ###### illustrative Mk/HMM plot, linear pathway
 
 set.seed(12)
+
+# parameters for this example
 L = 4
 n = 32
-#n = 16
+# first simulate a tree and dynamics for this parameterisation
 sim.tree = hyperdags::simulate_accumulation(n, L, dynamics="linear")
 data.0p = do.call(rbind, sim.tree$x)[1:n,]
 tree.0p = sim.tree$my.tree
 rownames(data.0p) = tree.0p$tip.label
 
+# visualise this synthetic data
 plot_hyperinf_data(data.0p, tree.0p)
+
+# run EvAM inference (irreversible and reversible)
 fit.0pa = hyperinf(data.0p, tree.0p, boot.parallel = 10)
 fit.0pb.raw = hyperinf(data.0p, tree.0p, reversible=TRUE)
+fit.0pb = bootstrap_mk_fit(fit.0pb.raw)
+
+# visualise outputs and comparison
 plot_hyperinf(fit.0pb.raw)
 plot_hyperinf_ordering_matrices(list(fit.0pa, fit.0pb.raw))
-fit.0pb = bootstrap_mk_fit(fit.0pb.raw)
 plot_hyperinf_bubbles(fit.0pb)
-#fit.0pc = hyperinf(data.0p, tree.0p, method="hypertraps")
 
+# use comparison method in summary visualisations of the comparison
 co.plot.2 = plot_hyperinf_compare_orderings(fit.0pa, fit.0pb, p.scale=0.5, thetastep=3, expt.names=c("HyperHMM", "HyperMk"))
-
-#plot_hyperinf_bubbles(list(fit.0pa, fit.0pb, fit.0pc), p.scale=0.5)
-
 
 plot.om.abs = plot_hyperinf_ordering_matrices(c(fit.0pa$boots, fit.0pb$boots),
                                               expt.names=c(rep("HyperHMM",11), rep("HyperMk", 10)), type="absolute")
@@ -46,6 +50,7 @@ net.plot.2 = plot_hyperinf_comparative(fit.0pb$boots[1:10], style="limited",
                                        expt.names=rep("Mk", length(fit.0pa$boots[1:10])), 
                                        threshold = 0.02, bend=2, label_size = 2.5) 
 
+# build the summary plot with styling
 co.net.plot.alt = ggarrange(
 net.plot.1 + 
   scale_edge_alpha_continuous(range=c(0.5,1)) + 
@@ -78,20 +83,24 @@ png("part-1-plot-alt.png", width=700*sf, height=550*sf, res=72*sf)
 print(part.1.plot.alt)
 dev.off()
 
-######
+###### next illustration, with Poisson dynamics
 
+# as before, simulate a tree and synthetic data
 set.seed(1)
 sim.tree.2 = hyperdags::simulate_accumulation(n, L, dynamics="poisson")
 data.0 = do.call(rbind, sim.tree.2$x)[1:n,]
 tree.0 = sim.tree.2$my.tree
 rownames(data.0) = tree.0$tip.label
 
+# visualise
 plot_hyperinf_data(data.0, tree.0)
+
+# run EvAM inference
 fit.0a = hyperinf(data.0, tree.0, boot.parallel = 10)
 fit.0b.raw = hyperinf(data.0, tree.0, reversible=TRUE)
 fit.0b = bootstrap_mk_fit(fit.0b.raw)
-#fit.0c = hyperinf(data.0, tree.0, method="hypertraps")
 
+# construct comparison plots
 co.plot.1 = plot_hyperinf_compare_orderings(fit.0a, fit.0b, p.scale=0.5, thetastep=3, expt.names=c("HyperHMM", "HyperMk"))
 
 plot.om.abs.1 = plot_hyperinf_ordering_matrices(c(fit.0a$boots, fit.0b$boots),
@@ -99,7 +108,7 @@ plot.om.abs.1 = plot_hyperinf_ordering_matrices(c(fit.0a$boots, fit.0b$boots),
 plot.om.rel.1 = plot_hyperinf_ordering_matrices(c(fit.0a$boots, fit.0b$boots),
                                               expt.names=c(rep("HyperHMM",11), rep("HyperMk", 10)), type="relative")
 
-#plot_hyperinf_bubbles(list(fit.0a, fit.0b, fit.0c), p.scale=0.5)
+# build summary plot and style
 
 part.2.plot = ggarrange(plot_hyperinf_data(data.0, tree.0), 
           plot_hyperinf_data(data.0p, tree.0p),
@@ -118,15 +127,19 @@ dev.off()
 
 ######## cross-sectional example
 
+# synthetic data
 set.seed(1)
 n = 4
 data.a = matrix(rep(c(0,0,0,0,1, 
                       0,0,0,1,1, 
                       0,0,1,1,1,
                       0,1,1,1,1), n/4), byrow = TRUE, ncol=5, nrow=n)
+
+# inference using the dataset and its "inverse"
 fit.1a = hyperinf(data.a, boot.parallel = 30)
 fit.2a = hyperinf(1-data.a, boot.parallel = 30)
 
+# comparison plot and styling
 recolor2 = scale_fill_manual(values=c("steelblue", "tomato", "white"))
 nominorx = scale_x_continuous(breaks = scales::breaks_width(1), minor_breaks = NULL)
 nominory = scale_y_continuous(breaks = scales::breaks_width(1), minor_breaks = NULL)
